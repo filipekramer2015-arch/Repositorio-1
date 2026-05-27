@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Analytics Dashboard</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="light-mode">
+
+    <div class="d-flex" id="wrapper">
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-heading text-center py-4 text-primary fs-4 fw-bold text-uppercase border-bottom">
+                <i class="fas fa-chart-line me-2"></i>DataCorp
+            </div>
+            <div class="list-group list-group-flush my-3">
+                <a href="#" class="list-group-item list-group-item-action bg-transparent active"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent"><i class="fas fa-chart-bar me-2"></i>Relatórios</a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent"><i class="fas fa-cog me-2"></i>Configurações</a>
+            </div>
+            <div class="mt-auto p-3">
+                <button class="btn btn-outline-primary w-100 theme-toggle" id="themeToggle">
+                    <i class="fas fa-moon me-2"></i>Modo Escuro
+                </button>
+            </div>
+        </div>
+
+        <div id="page-content-wrapper">
+            <nav class="navbar navbar-expand-lg navbar-custom py-3 px-4 shadow-sm">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-align-left text-muted fs-4 me-3" id="menu-toggle" style="cursor: pointer;"></i>
+                    <h2 class="fs-4 m-0 fw-bold">Visão Geral Corporativa</h2>
+                </div>
+                
+                <div class="ms-auto d-flex align-items-center gap-3">
+                    <input type="file" id="excelInput" class="form-control form-control-sm" accept=".xlsx, .xls">
+                    <button class="btn btn-sm btn-primary action-btn" onclick="window.print()"><i class="fas fa-print"></i></button>
+                    <button class="btn btn-sm btn-danger action-btn" id="exportPdf"><i class="fas fa-file-pdf"></i> PDF</button>
+                </div>
+            </nav>
+
+            <div class="container-fluid px-4" id="dashboard-container">
+                <div id="uploadPrompt" class="alert alert-info mt-4 text-center shadow-sm">
+                    <i class="fas fa-upload fs-2 mb-2 d-block"></i>
+                    Carregue uma planilha Excel (.xlsx) no canto superior direito para gerar o dashboard automaticamente.
+                </div>
+
+                <div id="mainDashboard" style="display: none;">
+                    
+                    <div class="row mt-4 filter-section p-3 rounded shadow-sm">
+                        <div class="col-md-3 mb-2">
+                            <label class="form-label text-muted small fw-bold">Pesquisa Textual</label>
+                            <input type="text" id="globalSearch" class="form-control form-control-sm" placeholder="Buscar...">
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <label class="form-label text-muted small fw-bold">Categoria</label>
+                            <select id="filterCategory" class="form-select form-select-sm"><option value="">Todas</option></select>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <label class="form-label text-muted small fw-bold">Período / Referência</label>
+                            <select id="filterDate" class="form-select form-select-sm"><option value="">Todos</option></select>
+                        </div>
+                        <div class="col-md-3 mb-2 d-flex align-items-end">
+                            <button class="btn btn-sm btn-secondary w-100" id="clearFilters"><i class="fas fa-eraser me-1"></i>Limpar Filtros</button>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4" id="kpiCards">
+                        <div class="col-md-2 col-sm-6 mb-3"><div class="card kpi-card shadow-sm p-3"><h6 class="text-muted">Total Registros</h6><h3 id="kpi-records" class="fw-bold text-primary">0</h3></div></div>
+                        <div class="col-md-2 col-sm-6 mb-3"><div class="card kpi-card shadow-sm p-3"><h6 class="text-muted">Total Quantidade</h6><h3 id="kpi-qty" class="fw-bold text-success">0</h3></div></div>
+                        <div class="col-md-2 col-sm-6 mb-3"><div class="card kpi-card shadow-sm p-3"><h6 class="text-muted">Valor Total</h6><h3 id="kpi-total" class="fw-bold text-info">R$ 0</h3></div></div>
+                        <div class="col-md-2 col-sm-6 mb-3"><div class="card kpi-card shadow-sm p-3"><h6 class="text-muted">Média</h6><h3 id="kpi-avg" class="fw-bold text-warning">0</h3></div></div>
+                        <div class="col-md-2 col-sm-6 mb-3"><div class="card kpi-card shadow-sm p-3"><h6 class="text-muted">Maior Valor</h6><h3 id="kpi-max" class="fw-bold text-danger">0</h3></div></div>
+                        <div class="col-md-2 col-sm-6 mb-3"><div class="card kpi-card shadow-sm p-3"><h6 class="text-muted">Menor Valor</h6><h3 id="kpi-min" class="fw-bold text-secondary">0</h3></div></div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-lg-8 mb-4">
+                            <div class="card shadow-sm chart-container">
+                                <div class="card-header bg-transparent border-0 fw-bold">Evolução de Linha / Área</div>
+                                <div class="card-body"><canvas id="lineChart"></canvas></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 mb-4">
+                            <div class="card shadow-sm chart-container">
+                                <div class="card-header bg-transparent border-0 fw-bold">Distribuição por Categoria</div>
+                                <div class="card-body"><canvas id="doughnutChart"></canvas></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-6 mb-4">
+                            <div class="card shadow-sm chart-container">
+                                <div class="card-header bg-transparent border-0 fw-bold">Análise Comparativa (Barras)</div>
+                                <div class="card-body"><canvas id="barChart"></canvas></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 mb-4">
+                            <div class="card shadow-sm chart-container">
+                                <div class="card-header bg-transparent border-0 fw-bold">Proporção Geral (Pizza)</div>
+                                <div class="card-body"><canvas id="pieChart"></canvas></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-2 mb-5">
+                        <div class="col-12">
+                            <div class="card shadow-sm p-3 table-responsive">
+                                <h5 class="fw-bold mb-3">Detalhamento de Dados</h5>
+                                <table id="dataTable" class="table table-hover table-striped w-100">
+                                    <thead><tr id="tableHead"></tr></thead>
+                                    <tbody id="tableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <script src="script.js"></script>
+</body>
+</html>
